@@ -61,7 +61,7 @@ func DefaultParams(service string) *QueryParam {
 // either read or buffer.
 func Query(params *QueryParam) error {
 	// Create a new client
-	client, err := newClient()
+	client, err := newClient(params.Interface)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ type client struct {
 
 // NewClient creates a new mdns Client that can be used to query
 // for records
-func newClient() (*client, error) {
+func newClient(intf *net.Interface) (*client, error) {
 	// TODO(reddaly): At least attempt to bind to the port required in the spec.
 	// Create a IPv4 listener
 	uconn4, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.IPv4zero, Port: 0})
@@ -125,11 +125,11 @@ func newClient() (*client, error) {
 		return nil, fmt.Errorf("failed to bind to any unicast udp port")
 	}
 
-	mconn4, err := net.ListenMulticastUDP("udp4", nil, ipv4Addr)
+	mconn4, err := net.ListenMulticastUDP("udp4", intf, ipv4Addr)
 	if err != nil {
 		log.Printf("[ERR] mdns: Failed to bind to udp4 port: %v", err)
 	}
-	mconn6, err := net.ListenMulticastUDP("udp6", nil, ipv6Addr)
+	mconn6, err := net.ListenMulticastUDP("udp6", intf, ipv6Addr)
 	if err != nil {
 		log.Printf("[ERR] mdns: Failed to bind to udp6 port: %v", err)
 	}
